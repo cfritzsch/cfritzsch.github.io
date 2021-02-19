@@ -1,14 +1,11 @@
 const imageFile = document.getElementById("imageFile");
-//const previewContainer = document.getElementById("imagePreview");
-//const previewImage = previewContainer.querySelector(".img-fluid");
 const previewImage = document.getElementById("previewImg");
-//const PreviewDefaultText = previewContainer.querySelector(".image-preview__default-text");
-const PreviewDefaultText = document.getElementById("image-preview__default-text");
-const RGBResultTextarea = document.getElementById("RGBResult");
+//const PreviewDefaultText = document.getElementById("image-preview__default-text");
 const widthInput = document.getElementById("widthInputValue");
 const heightInput = document.getElementById("heightInputValue");
 
 var imageData = [];
+var partList = [];
 
 imageFile.addEventListener("change", function() {
     const file = this.files[0]
@@ -18,7 +15,7 @@ imageFile.addEventListener("change", function() {
     if(file.type.match(/image.*/)) {
         const reader = new FileReader();
 
-        PreviewDefaultText.style.display = "none";
+        //PreviewDefaultText.style.display = "none";
         previewImage.style.display = "block";
 		
 		previewImage.decode()
@@ -27,7 +24,8 @@ imageFile.addEventListener("change", function() {
 		})
 		.catch((encodingError) => {
 			console.log('previewImage decoding error')
-			console.log(encodingError)
+			console.log(encodingError);
+			alert('Error loading image. Please try again or choose another image.')
 		})
 
         reader.addEventListener("load", function() {
@@ -37,14 +35,20 @@ imageFile.addEventListener("change", function() {
 
 			document.getElementById("buttonCalculate").disabled = false;
         })
+		
+		// Reset canvas
+		var canvas = document.getElementById("previewMosaicCanvas");
+		var context = canvas.getContext('2d');
+		context.clearRect(0, 0, canvas.width, canvas.height); //clear html5 canvas
 
 		//console.log('readingDataURL')
         reader.readAsDataURL(file);
     } else {
-        PreviewDefaultText.style.display = null;
+        //PreviewDefaultText.style.display = null;
         previewImage.style.display = null;
 
         document.getElementById("buttonCalculate").disabled = true;
+		
 
         previewImage.setAttribute("src", "");
         RGBResultTextarea.value = "";
@@ -55,12 +59,12 @@ imageFile.addEventListener("change", function() {
 })
 
 
-var partListTableAddRowButton = document.getElementById("addTableRow")
+/* var partListTableAddRowButton = document.getElementById("addTableRow")
 partListTableAddRowButton.addEventListener('click', function () {
     var partListTable = document.getElementById("partTable")
     //console.log(partListTable.rows.length)
     var row = table.insertRow(partListTable.rows.length()-1);
-})
+}) */
 
 
 var calculateButton = document.getElementById("buttonCalculate")
@@ -91,11 +95,36 @@ calculateButton.addEventListener('click', function () {
 var myDropdown = document.getElementsByClassName("dropdown-item")
 for (var i = 0; i < myDropdown.length; i++) {
     myDropdown[i].addEventListener('click', function () {
-        var partList = getPartList(this.id)
+        getPartList(this.id);
         //console.log(partList)
-        setTableItemsFromPartList(partList)
+        //setTableItemsFromPartList(partList)
     })
 }
+
+
+var myDropdown = document.getElementById("partListGroup").getElementsByClassName('list-group-item')
+for (var i = 0; i < myDropdown.length; i++) {
+	myDropdown[i].addEventListener('click', function () {
+		for (var i = 0; i < myDropdown.length; i++) {
+			myDropdown[i].classList.remove('active');
+		}
+		this.classList.add('active');
+        getPartList(this.id);
+        //setTableItemsFromPartList(partList)
+    })
+}
+
+
+var myButtonGroup = document.getElementById("usePartLimitsBtnGroup").getElementsByClassName('btn')
+for (var i = 0; i < myButtonGroup.length; i++) {
+	myButtonGroup[i].addEventListener('click', function () {
+		for (var i = 0; i < myButtonGroup.length; i++) {
+			myButtonGroup[i].classList.remove('active');
+		}
+		this.classList.add('active');
+    })
+}
+
 
 
 var drawPreview = function () {
@@ -163,9 +192,9 @@ var drawMosaic = function (im) {
         }
     }
 
-    //context.fillStyle = "black";
-    //context.globalCompositeOperation = 'destination-over'
-    //context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "black";
+    context.globalCompositeOperation = 'destination-over'
+    context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 
@@ -182,7 +211,7 @@ var getPartList = function (id) {
     switch (id) {
         case "dropdownButtonBeatles":
             console.log("beatles");
-            var partList = [
+            partList = [
                 [5, 19, 29, 698], // r, g, b, count
                 [159, 195, 233, 57],
                 [248, 187, 61, 65],
@@ -198,26 +227,54 @@ var getPartList = function (id) {
                 [96, 116, 161, 52],
                 [228, 205, 158, 283],
                 [255, 255, 255, 149]
-              ];
-            return partList;
+				];
+            return
             break;
         case "dropdownButtonMonroe":
             console.log("monroe");
+			partList = [
+                [5, 19, 29, 629],
+				[228, 173, 200, 587],
+				[108, 110, 104, 131],
+				[200, 112, 160, 587],
+				[146, 57, 120, 46],
+				[54, 174, 191, 587],
+				[242, 205, 55, 587]
+				];
             return [];
             break;
-        case "dropdownButtonCustom":
-            console.log("custom");
+        case "dropdownButtonIronman":
+            console.log("ironman");
+			partList = [
+				[5, 19, 29, 476],
+				[10, 52, 99, 529],
+				[108, 110, 104, 91],
+				[53, 33, 0, 196],
+				[169, 85, 0, 162],
+				[114, 14, 15, 214],
+				[149, 138, 115, 97],
+				[160, 165, 169, 31],
+				[204, 112, 42, 208],
+				[170, 127, 46, 232],
+				[201, 26, 9, 308],
+				[88, 42, 18, 191],
+				[96, 116, 161, 23],
+				[228, 205, 158, 155],
+				[255, 255, 255, 61]
+				];
+            return [];
             break;
         default:
             console.log("unknown");
             break;
       }
 }
+getPartList('dropdownButtonBeatles');
 
 
 var setTableItemsFromPartList = function (partList) {
-    var partListTable = document.getElementById("partTable")
-    console.log(partListTable)
+    //var partListTable = document.getElementById("partTable")
+    //console.log(partListTable)
 }
 
 
@@ -231,24 +288,21 @@ const generateValidColoringAndDraw = async () => {
 
 
 var generateValidColoring = function () {
-	//var red[] = new float[imageData.width*imageData.height];
-	//var green[] = new float[imageData.width*imageData.height];
-	//var blue[] = new float[imageData.width*imageData.height];
 	
-	//console.log('starting coloring')
-	
-	var colorList = getPartList('dropdownButtonBeatles');
-	var im = imageData;
+	var colorList = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
 	
 	// Calculate distance of all pixels to all colors
-	// Add a bit of randomness into color
+	// Add a bit of randomness into color for jittering
 	var pxCount = 0;
 	var distMat = createArray(imageData.width, imageData.height, colorList.length);
 	var outIm = createArray(imageData.width, imageData.height, 3);
+	var outCol = createArray(imageData.width, imageData.height);
 	
-	var limitedParts = false;
+	var usePartLimitsButton = document.getElementById("usePartLimitsButton");
+	var limitedParts = (usePartLimitsButton.classList.value.includes("active"));
+	console.log(limitedParts);
 	
-	//console.log('starting coloring for loop');
+	console.log('starting first coloring for loop');
 	for (var x = 0; x < imageData.width; x++) {
         for (var y = 0; y < imageData.height; y++) {
 			var index = (y*imageData.width + x) * 4;
@@ -271,18 +325,92 @@ var generateValidColoring = function () {
 			outIm[x][y][0] = colorList[bestCol][0];
 			outIm[x][y][1] = colorList[bestCol][1];
 			outIm[x][y][2] = colorList[bestCol][2];
+			outCol[x][y] = bestCol;
 			pxCount = pxCount + 1;
 			if (limitedParts) {
 				colorList[bestCol][3] = colorList[bestCol][3] - 1;
 			}
 		}
 	}
-	//console.log('coloring done');
+	console.log('first coloring done');
 	
-	//console.log(colorList)
-	//console.log(outIm);
+	var stillPartsAvailable = false;
+	for (var col = 0; col < colorList.length; col++){
+		if (colorList[col][3] > 0) {
+			stillPartsAvailable = true;
+		}
+	}
+	
+	if (!stillPartsAvailable) {
+		alert('Insufficient parts for this specific mosaic size.')
+		return outIm;
+	}
 	
 	var distMatOrig = distMat;
+	
+	if (limitedParts) {
+		console.log('optimizing');
+		var keepRunning = true;
+        var count = 0;
+		
+		while (keepRunning && count < 100) {
+			count = count +1;
+			keepRunning = false;
+			console.log(`  iteration ${count}`);
+			for (var x = 0; x < imageData.width; x++) {
+				for (var y = 0; y < imageData.height; y++) {
+					bestCols = [];
+					bestDist = Infinity;
+					for (var col = 0; col < colorList.length; col++) {
+						if (distMatOrig[x][y][col] < distMatOrig[x][y][outCol[x][y]]) { // check that best color is still available
+							bestDist = distMat[x][y][col];
+							bestCols.push(col);
+						}
+					}
+					if (bestCols.length > 0) {
+						// There would be a better choice for this pixel -> can we swap?
+						for (var col = 0; col < bestCols.length; col++) {
+							var loss = distMatOrig[x][y][outCol[x][y]] - distMatOrig[x][y][bestCols[col]]; // what did we loose by suboptimal choice?
+							
+							x2loop: // This is a label name
+								for (var x2 = 0; x2 < imageData.width; x2++) {
+									for (var y2 = 0; y2 < imageData.height; y2++) {
+										if (outCol[x2][y2] == bestCols[col]) {
+											// Possible swap candidate
+											var gain = distMatOrig[x2][y2][outCol[x][y]] - distMatOrig[x2][y2][bestCols[col]]; // what can we gain by swapping?
+											if (gain - loss < 0) {
+												// -> swap
+												outIm[x][y][0] = colorList[bestCols[col]][0];
+												outIm[x][y][1] = colorList[bestCols[col]][1];
+												outIm[x][y][2] = colorList[bestCols[col]][2];
+												outIm[x2][y2][0] = colorList[outCol[x][y]][0];
+												outIm[x2][y2][1] = colorList[outCol[x][y]][1];
+												outIm[x2][y2][2] = colorList[outCol[x][y]][2];
+												outCol[x][y] = bestCols[col];
+												outCol[x2][y2] = outCol[x][y];
+												
+												keepRunning = true;
+												break x2loop;
+											} else if (colorList[bestCols[col]][3] > 0) {
+												// There is a better color left in the pool -> swap
+												colorList[bestCols[col]][3] = colorList[bestCols[col]][3] - 1;
+												colorList[outCol[x][y]][3] = colorList[outCol[x][y]][3] + 1;
+												outIm[x][y][0] = colorList[bestCols[col]][0];
+												outIm[x][y][1] = colorList[bestCols[col]][1];
+												outIm[x][y][2] = colorList[bestCols[col]][2];
+												keepRunning = true;
+												break x2loop;
+											}
+										}
+									}
+								}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	
 	return outIm;
 	
@@ -300,125 +428,3 @@ function createArray(length) {
 
     return arr;
 }
-
-
-// function [outIm, outColIm] = generateValidColoring(im, colorList, hueWeight, satWeight, valueWeight, unlimitedParts, doPostprocessing)
-
-    // R = im(:,:,1); R = double(R(:)) + randn(size(R(:)))*0.1;
-    // G = im(:,:,2); G = double(G(:)) + randn(size(G(:)))*0.1;
-    // B = im(:,:,3); B = double(B(:)) + randn(size(B(:)))*0.1;
-    
-    // hsvIm = rgb2lab(cat(3,R,G,B));
-    // H = hsvIm(:,:,1);
-    // S = hsvIm(:,:,2);
-    // V = hsvIm(:,:,3);
-    
-    // colorList = double(colorList);
-    // colorListHSV = rgb2lab(cat(3,colorList(:,1), colorList(:,2), colorList(:,3)));
-    
-    // distMat = zeros(size(R,1),size(colorList,1));
-    // for iCol = 1:size(colorList,1)
-        // for iPx = 1:size(R,1)
-            // if hueWeight == 0 && satWeight == 0 && valueWeight == 0
-                // distMat(iPx, iCol) = (R(iPx)-colorList(iCol,1))^2 + (G(iPx)-colorList(iCol,2))^2 + (B(iPx)-colorList(iCol,3))^2;
-            // else
-                // distMat(iPx, iCol) = (H(iPx)-colorListHSV(iCol,1))^2 * hueWeight + (S(iPx)-colorListHSV(iCol,2))^2 * satWeight + (V(iPx)-colorListHSV(iCol,3))^2 * valueWeight;
-            // end
-            // //distMat(iPx, iCol) = colorangle([R(iPx),G(iPx),B(iPx)],colorList(iCol,1:3));
-        // end
-    // end
-    // distMatOrig = distMat;
-    
-    // // First, fill image with closest colors (until they are empty)
-    // // -> That's a pretty good first guess of the optimal solution 
-    // outIm = im * 0;
-    // outR = R * 0;
-    // outG = G * 0;
-    // outB = B * 0;
-    // outCol = R * 0;
-    // while any(~isinf(distMat(:)))
-        // [px,col] = find(distMat == min(distMat(:)), 1);
-        // outR(px) = colorList(col,1);
-        // outG(px) = colorList(col,2);
-        // outB(px) = colorList(col,3);
-        // outCol(px) = col;
-        // distMat(px, :) = Inf;
-        
-        // if ~unlimitedParts
-            // colorList(col,4) = colorList(col,4) - 1;
-            // if colorList(col,4) <= 0
-                // distMat(:, col) = Inf; // use Inf dist as signal that color is empty
-            // end
-        // end
-    // end
-    
-    // outIm(:,:,1) = reshape(outR(:),size(im,1),size(im,2));
-    // outIm(:,:,2) = reshape(outG(:),size(im,1),size(im,2));
-    // outIm(:,:,3) = reshape(outB(:),size(im,1),size(im,2));
-    // outColIm = reshape(outCol(:),size(im,1),size(im,2));
-
-// //     cost = imageCostFun(im, outIm);
-// //     fprintf('\n  %.0f ',cost);
-    
-    // // Now, swap parts as long as possible to improve overall color similarity
-    // // Also allow swapping with the unused pool
-    // if ~unlimitedParts && doPostprocessing
-        // keepRunning = true;
-        // count = 0;
-        // while keepRunning && count < 100
-            // count = count +1;
-            // keepRunning = false; fprintf('.')
-            // for iPx = 1:size(outCol,1)
-                // //if min(distMatOrig(iPx,:)) < distMatOrig(iPx,outCol(iPx))
-                // if any(distMatOrig(iPx,:) < distMatOrig(iPx,outCol(iPx)))
-                    // // suboptimal choice -> can we swap?
-                    // //bestCol = find(distMatOrig(iPx,:) == min(distMatOrig(iPx,:)));
-                    // bestCol = find(distMatOrig(iPx,:) < distMatOrig(iPx,outCol(iPx)));
-                    // for iCol = 1:length(bestCol)
-                        // possibleSwaps = find(outCol == bestCol(iCol));
-                        // loss = distMatOrig(iPx,outCol(iPx)) - distMatOrig(iPx,bestCol(iCol)); // what did we loose by suboptimal choice?
-                        // gains = (distMatOrig(possibleSwaps,outCol(iPx)) - distMatOrig(possibleSwaps,bestCol(iCol))); // what can we gain by swapping?
-
-                        // if min(gains-loss) < 0 // -> swap
-                            // idx = find((gains-loss) == min(gains-loss), 1);
-                            // idx = possibleSwaps(idx);
-    // //                         minDist = distMatOrig(iPx,bestCol);
-    // //                         distMatOrig(iPx,bestCol) = distMatOrig(iPx,outCol(iPx));
-    // //                         distMatOrig(iPx,outCol(iPx)) = minDist;
-    // //                         minDist = distMatOrig(idx,bestCol);
-    // //                         distMatOrig(idx,bestCol) = distMatOrig(idx,outCol(iPx));
-    // //                         distMatOrig(idx,outCol(iPx)) = minDist;
-                            // outR(iPx) = colorList(bestCol(iCol),1);
-                            // outG(iPx) = colorList(bestCol(iCol),2);
-                            // outB(iPx) = colorList(bestCol(iCol),3);
-                            // outR(idx) = colorList(outCol(iPx),1);
-                            // outG(idx) = colorList(outCol(iPx),2);
-                            // outB(idx) = colorList(outCol(iPx),3);
-                            // outCol(idx) = outCol(iPx);
-                            // outCol(iPx) = bestCol(iCol);
-                            // keepRunning = true;
-                            // break
-                        // elseif colorList(bestCol(iCol),4) > 0
-                            // //there is a better color left in the pool -> swap
-                            // colorList(bestCol(iCol),4) = colorList(bestCol(iCol),4) - 1;
-                            // colorList(outCol(iPx),4) = colorList(outCol(iPx),4) + 1;
-                            // outR(iPx) = colorList(bestCol(iCol),1);
-                            // outG(iPx) = colorList(bestCol(iCol),2);
-                            // outB(iPx) = colorList(bestCol(iCol),3);
-                            // keepRunning = true;
-                            // fprintf('-');
-                            // break
-                        // end
-                    // end
-                // end
-            // end
-        // end
-        // outIm(:,:,1) = reshape(outR(:),size(im,1),size(im,2));
-        // outIm(:,:,2) = reshape(outG(:),size(im,1),size(im,2));
-        // outIm(:,:,3) = reshape(outB(:),size(im,1),size(im,2));
-        // outColIm = reshape(outCol(:),size(im,1),size(im,2));
-
-// //         cost = imageCostFun(im, outIm);
-// //         fprintf(' %.0f',cost);
-    // end
-// end
