@@ -8,8 +8,7 @@ const RGBResultTextarea = document.getElementById("RGBResult");
 const widthInput = document.getElementById("widthInputValue");
 const heightInput = document.getElementById("heightInputValue");
 
-var resizeCanvas = document.createElement('canvas');
-var resizedImage = [];
+var imageData = [];
 
 imageFile.addEventListener("change", function() {
     const file = this.files[0]
@@ -22,25 +21,14 @@ imageFile.addEventListener("change", function() {
         PreviewDefaultText.style.display = "none";
         previewImage.style.display = "block";
 
+		previewImage.decode().then(() => {
+			console.log('previewImage decoded')
+		});
+
         reader.addEventListener("load", function() {
             previewImage.setAttribute("src", this.result);
 
-            
-            resizeCanvas.width = widthInput.value;
-            resizeCanvas.height = heightInput.value;
-            resizeCanvas.getContext('2d').drawImage(previewImage, 0, 0, resizeCanvas.width, resizeCanvas.height);
-
-            var imageData = resizeCanvas.getContext('2d').getImageData(0, 0, resizeCanvas.width, resizeCanvas.height);
-            
-            // Now you can access pixel data from imageData.data.
-            // It's a one-dimensional array of RGBA values.
-            // Here's an example of how to get a pixel's color at (x,y)
-            
-            document.getElementById("buttonCalculate").disabled = false;
-
-            drawPreview(imageData)
-            resizedImage = imageData;
-            
+			document.getElementById("buttonCalculate").disabled = false;
         })
 
         reader.readAsDataURL(file);
@@ -69,7 +57,19 @@ partListTableAddRowButton.addEventListener('click', function () {
 
 var calculateButton = document.getElementById("buttonCalculate")
 calculateButton.addEventListener('click', function () {
-    drawPreview(previewImage)
+	var resizeCanvas = document.createElement('canvas');
+            
+	resizeCanvas.width = widthInput.value;
+	resizeCanvas.height = heightInput.value;
+	context = resizeCanvas.getContext('2d');
+	setTimeout(() => { 
+		context.drawImage(previewImage, 0, 0, resizeCanvas.width, resizeCanvas.height);
+	}, 100);
+	setTimeout(() => {  
+		imageData = context.getImageData(0, 0, resizeCanvas.width, resizeCanvas.height);
+		drawPreview();
+	}, 200);
+    
 })
 
 
@@ -86,7 +86,7 @@ for (var i = 0; i < myDropdown.length; i++) {
 }
 
 
-var drawPreview = function (imageData) {
+var drawPreview = function () {
     console.log(imageData)
     var canvas = document.getElementById("previewMosaicCanvas")
     var context = canvas.getContext("2d");
@@ -114,9 +114,9 @@ var drawPreview = function (imageData) {
         }
     }
 
-    context.fillStyle = "black";
-    context.globalCompositeOperation = 'destination-over'
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    //context.fillStyle = "black";
+    //context.globalCompositeOperation = 'destination-over'
+    //context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 
