@@ -35,21 +35,23 @@
         </div>
         <div class="row">
             <div class="col-md-4">
-                <div class="row pb-4">
-                    <label for="imageFile" class="form-label"><strong>1. Choose a source image</strong></label>
+                <div class="row">
+                    <label for="imageFile" class="form-label"><strong>1. Choose a source image (It will not be uploaded)</strong></label>
+				</div>
+				<div class="row pb-4 px-3">
 					<input class="form-control mb-2" type="file" id="imageFile" name="imageFile">
 					<img src="" class="img-thumbnail" alt="No image chosen" id="previewImg">
 					<!--span class="image-preview__default-text", id="image-preview__default-text">No image chosen</span-->
                 </div>
                 <div class="row pb-4">
-                    <label class="form-label"><strong>2. Select the size of the final mosaic</strong></label>
-                    <div class="col mb-2">
+                    <label class="form-label"><strong>2. Select the size of the mosaic</strong></label>
+                    <div class="col mb-2 ps-3">
                         <form class="form-floating">
                             <input type="number" class="form-control" id="widthInputValue" placeholder="48" value="48">
                             <label for="widthInputValue">Width</label>
                         </form>
                     </div>
-                    <div class="col mb-2">
+                    <div class="col mb-2 pe-3">
                         <form class="form-floating">
                             <input type="number" class="form-control" id="heightInputValue" placeholder="48" value="48">
                             <label for="heightInputValue">Height</label>
@@ -105,25 +107,33 @@
                 </div-->
 				<div class="row pb-2">
 					<label for="partListGroup" class="form-label"><strong>3. Choose a color preset</strong></label>
-					<div class="list-group ps-2" id="partListGroup">
+					<div class="list-group px-3" id="partListGroup">
 					  <button type="button" class="list-group-item list-group-item-action active" id="dropdownButtonBeatles">Beatles</button>
 					  <button type="button" class="list-group-item list-group-item-action" id="dropdownButtonMonroe">Monroe</button>
 					  <button type="button" class="list-group-item list-group-item-action" id="dropdownButtonIronman">Ironman</button>
 					</div>
 				</div>
 				<div class="row pb-4">
-					<div class="btn-group" role="group" aria-label="usePartLimits" id="usePartLimitsBtnGroup">
-					    <button type="button" class="btn btn-secondary active" id="usePartLimitsButton">Use part limits of preset</button>
+					<label for="partLimitsBtnGroup" class="form-label text-center">Do you have multiple sets?</label>
+					<div class="btn-group px-3" role="group" aria-label="usePartLimits" id="partLimitsBtnGroup">
+					    <button type="button" class="btn btn-secondary active" id="partLimits1Button">1</button>
+						<button type="button" class="btn btn-secondary" id="partLimits2Button">2</button>
+						<button type="button" class="btn btn-secondary" id="partLimits3Button">3</button>
+						<button type="button" class="btn btn-secondary" id="partLimits4Button">4</button>
 					    <button type="button" class="btn btn-secondary" id="unlimitedPartsButton">Unlimited parts</button>
 					</div>
 				</div>
-                <div class="row pb-4">
+                <div class="row">
 					<label for="buttonCalculate" class="form-label"><strong>4. Run calculation</strong></label>
-                    <button type="button" class="btn btn-primary" id="buttonCalculate" disabled>Calculate mosaic</button>
+				</div>
+				<div class="row pb-4 px-3">
+					<button type="button mx-1" class="btn btn-primary" id="buttonCalculate" disabled>Calculate mosaic</button>
                 </div>
-                <div class="row pb-4">
+                <div class="row">
 					<label for="buttonDownload" class="form-label"><strong>5. Download instructions</strong></label>
-                    <button type="button" class="btn btn-primary" id="buttonDownload" disabled>Download</button>
+				</div>
+				<div class="row pb-4 px-3">
+					<button type="button" class="btn btn-primary" id="buttonDownload" disabled>Download</button>
                 </div>
             </div>
             <div class="col-md-8" id="imagePreview">

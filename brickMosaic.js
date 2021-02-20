@@ -25,7 +25,7 @@ imageFile.addEventListener("change", function() {
 		.catch((encodingError) => {
 			console.log('previewImage decoding error')
 			console.log(encodingError);
-			alert('Error loading image. Please try again or choose another image.')
+			//alert('Error loading image. Please try again or choose another image.')
 		})
 
         reader.addEventListener("load", function() {
@@ -115,7 +115,7 @@ for (var i = 0; i < myDropdown.length; i++) {
 }
 
 
-var myButtonGroup = document.getElementById("usePartLimitsBtnGroup").getElementsByClassName('btn')
+var myButtonGroup = document.getElementById("partLimitsBtnGroup").getElementsByClassName('btn')
 for (var i = 0; i < myButtonGroup.length; i++) {
 	myButtonGroup[i].addEventListener('click', function () {
 		for (var i = 0; i < myButtonGroup.length; i++) {
@@ -291,16 +291,31 @@ var generateValidColoring = function () {
 	
 	var colorList = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
 	
+	var usePartLimitsButton = document.getElementById("unlimitedPartsButton");
+	var limitedParts = !(usePartLimitsButton.classList.value.includes("active"));
+	console.log(limitedParts);
+	if (limitedParts) {
+		var partLimits1Button = document.getElementById("partLimits1Button");
+		if (partLimits1Button.classList.value.includes("active")) { var partMultiplier = 1; }
+		var partLimits2Button = document.getElementById("partLimits2Button");
+		if (partLimits2Button.classList.value.includes("active")) { var partMultiplier = 2; }
+		var partLimits3Button = document.getElementById("partLimits3Button");
+		if (partLimits3Button.classList.value.includes("active")) { var partMultiplier = 3; }
+		var partLimits4Button = document.getElementById("partLimits4Button");
+		if (partLimits4Button.classList.value.includes("active")) { var partMultiplier = 4; }
+		console.log(partMultiplier);
+		// Adjust number of parts in partList
+		for (var col = 0; col < colorList.length; col++) {
+			colorList[col][3] = colorList[col][3] * partMultiplier;
+		}
+	}
+	
 	// Calculate distance of all pixels to all colors
 	// Add a bit of randomness into color for jittering
 	var pxCount = 0;
 	var distMat = createArray(imageData.width, imageData.height, colorList.length);
 	var outIm = createArray(imageData.width, imageData.height, 3);
 	var outCol = createArray(imageData.width, imageData.height);
-	
-	var usePartLimitsButton = document.getElementById("usePartLimitsButton");
-	var limitedParts = (usePartLimitsButton.classList.value.includes("active"));
-	console.log(limitedParts);
 	
 	console.log('starting first coloring for loop');
 	for (var x = 0; x < imageData.width; x++) {
