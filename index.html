@@ -43,7 +43,7 @@
 					<img src="" class="img-thumbnail" alt="No image chosen" id="previewImg">
 					<!--span class="image-preview__default-text", id="image-preview__default-text">No image chosen</span-->
                 </div>
-                <div class="row pb-4">
+                <!--div class="row pb-4">
                     <label class="form-label"><strong>2. Select the size of the mosaic</strong></label>
                     <div class="col mb-2 ps-3">
                         <form class="form-floating">
@@ -57,6 +57,25 @@
                             <label for="heightInputValue">Height</label>
                         </form>
                     </div>
+				</div-->
+                <div class="row pb-4">
+					<label class="form-label"><strong>2. Select the size of the mosaic</strong></label>
+					<div class="col mb-2 ps-3 pe-1">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Width</span>
+							</div>
+							<input type="number" class="form-control" id="widthInputValue" placeholder="48" value="48">
+						</div>
+					</div>
+					<div class="col mb-2 pe-3 ps-1">
+						<div class="input-group input-group-sm">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Height</span>
+							</div>
+							<input type="number" class="form-control" id="heightInputValue" placeholder="48" value="48">
+						</div>
+					</div>
                 </div>
                 <!--div class="row">
                     <label for="partTable" class="form-label">3. Adjust the number of parts for each color</label>
@@ -108,9 +127,11 @@
 				<div class="row pb-2">
 					<label for="partListGroup" class="form-label"><strong>3. Choose a color preset</strong></label>
 					<div class="list-group px-3" id="partListGroup">
-					  <button type="button" class="list-group-item list-group-item-action active" id="dropdownButtonBeatles">Beatles</button>
-					  <button type="button" class="list-group-item list-group-item-action" id="dropdownButtonMonroe">Monroe</button>
-					  <button type="button" class="list-group-item list-group-item-action" id="dropdownButtonIronman">Ironman</button>
+					  <button type="button" class="list-group-item list-group-item-action active pt-0 pb-1" id="dropdownButtonBeatles">Beatles</button>
+					  <button type="button" class="list-group-item list-group-item-action pt-0 pb-1" id="dropdownButtonMonroe">Monroe</button>
+					  <button type="button" class="list-group-item list-group-item-action pt-0 pb-1" id="dropdownButtonIronman">Ironman</button>
+					  <button type="button" class="list-group-item list-group-item-action pt-0 pb-1" id="dropdownButtonSith">Sith</button>
+					  <button type="button" class="list-group-item list-group-item-action pt-0 pb-1" id="dropdownButtonHogwarts">Hogwarts</button>
 					</div>
 				</div>
 				<div class="row pb-4">
@@ -132,11 +153,11 @@
                 <div class="row">
 					<label for="buttonDownload" class="form-label"><strong>5. Download instructions</strong></label>
 				</div>
-				<div class="row pb-4 px-3">
+				<div class="row pb-5 mb-5 px-3">
 					<button type="button" class="btn btn-primary" id="buttonDownload" disabled>Download</button>
                 </div>
             </div>
-            <div class="col-md-8" id="imagePreview">
+            <div class="col-md-8 mb-5 pb-5">
                 <label for="previewImg" class="form-label"><strong>Mosaic preview</strong></label>
                 <canvas id="previewMosaicCanvas" width="800" height="800" style="border:1px solid #000000;">
                     Sorry, your browser doesn't support the &lt;canvas&gt; element.

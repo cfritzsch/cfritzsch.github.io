@@ -228,8 +228,7 @@ var getPartList = function (id) {
                 [228, 205, 158, 283],
                 [255, 255, 255, 149]
 				];
-            return
-            break;
+            return;
         case "dropdownButtonMonroe":
             console.log("monroe");
 			partList = [
@@ -241,8 +240,7 @@ var getPartList = function (id) {
 				[54, 174, 191, 587],
 				[242, 205, 55, 587]
 				];
-            return [];
-            break;
+            return;
         case "dropdownButtonIronman":
             console.log("ironman");
 			partList = [
@@ -262,8 +260,41 @@ var getPartList = function (id) {
 				[228, 205, 158, 155],
 				[255, 255, 255, 61]
 				];
-            return [];
-            break;
+            return;
+		case "dropdownButtonSith":
+            console.log("sith");
+			partList = [
+				[5, 19, 29, 877],
+				[255, 240, 58, 92],
+				[10, 52, 99, 447],
+				[108, 110, 104, 151],
+				[53, 33, 0, 200],
+				[114, 14, 15, 328],
+				[160, 165, 169, 110],
+				[254, 138, 24, 125],
+				[87, 88, 87, 271],
+				[201, 26, 9, 286],
+				[96, 116, 161, 139],
+				[255, 255, 255, 187]
+				];
+			return;
+		case "dropdownButtonHogwarts":
+            console.log("hogwarts");
+			partList = [
+				[5, 19, 29, 593],
+				[0, 85, 191, 431],
+				[75, 159, 74, 4],
+				[114, 14, 15, 503],
+				[137, 135, 136, 630],
+				[35, 120, 65, 499],
+				[160, 165, 169, 236],
+				[54, 174, 191, 10],
+				[87, 88, 87, 153],
+				[170, 127, 46, 604],
+				[201, 26, 9, 15],
+				[255, 255, 255, 369]
+				];
+			return;
         default:
             console.log("unknown");
             break;
@@ -305,9 +336,11 @@ var generateValidColoring = function () {
 		if (partLimits4Button.classList.value.includes("active")) { var partMultiplier = 4; }
 		console.log(partMultiplier);
 		// Adjust number of parts in partList
+		console.log(colorList[1][3]);
 		for (var col = 0; col < colorList.length; col++) {
 			colorList[col][3] = colorList[col][3] * partMultiplier;
 		}
+		console.log(colorList[1][3]);
 	}
 	
 	// Calculate distance of all pixels to all colors
