@@ -346,9 +346,9 @@ var generateValidColoring = function () {
 	for (var x = 0; x < imageData.width; x++) {
         for (var y = 0; y < imageData.height; y++) {
 			var index = (y*imageData.width + x) * 4;
-            var red = imageData.data[index] + Math.random()*13-1.5;
-            var green = imageData.data[index + 1] + Math.random()*13-1.5;
-            var blue = imageData.data[index + 2] + Math.random()*13-1.5;
+            var red = imageData.data[index] + Math.random()*3-1.5;
+            var green = imageData.data[index + 1] + Math.random()*3-1.5;
+            var blue = imageData.data[index + 2] + Math.random()*3-1.5;
 			
 			if (red != 0 || green != 0 || blue != 0) {
 				allBlack = false
