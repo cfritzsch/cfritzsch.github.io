@@ -9,8 +9,7 @@ var partList = [];
 
 imageFile.addEventListener("change", function() {
     const file = this.files[0]
-    //console.log(file);
-    //if (file) {
+
     // Ensure it's an image
     if(file.type.match(/image.*/)) {
         const reader = new FileReader();
@@ -29,8 +28,6 @@ imageFile.addEventListener("change", function() {
 		})
 
         reader.addEventListener("load", function() {
-			//console.log('reader loaded')
-			//console.log(this.result);
             previewImage.setAttribute("src", this.result);
 
 			document.getElementById("buttonCalculate").disabled = false;
@@ -41,7 +38,6 @@ imageFile.addEventListener("change", function() {
 		var context = canvas.getContext('2d');
 		context.clearRect(0, 0, canvas.width, canvas.height); //clear html5 canvas
 
-		//console.log('readingDataURL')
         reader.readAsDataURL(file);
     } else {
         //PreviewDefaultText.style.display = null;
@@ -96,7 +92,6 @@ var myDropdown = document.getElementsByClassName("dropdown-item")
 for (var i = 0; i < myDropdown.length; i++) {
     myDropdown[i].addEventListener('click', function () {
         getPartList(this.id);
-        //console.log(partList)
         //setTableItemsFromPartList(partList)
     })
 }
@@ -128,7 +123,6 @@ for (var i = 0; i < myButtonGroup.length; i++) {
 
 
 var drawPreview = function () {
-    //console.log(imageData)
     var canvas = document.getElementById("previewMosaicCanvas")
     var context = canvas.getContext("2d");
 
@@ -210,7 +204,6 @@ function rgbToHex(rgb) {
 var getPartList = function (id) {
     switch (id) {
         case "dropdownButtonBeatles":
-            console.log("beatles");
             partList = [
                 [5, 19, 29, 698], // r, g, b, count
                 [159, 195, 233, 57],
@@ -230,8 +223,7 @@ var getPartList = function (id) {
 				];
             return;
         case "dropdownButtonMonroe":
-            console.log("monroe");
-			partList = [
+            partList = [
                 [5, 19, 29, 629],
 				[228, 173, 200, 587],
 				[108, 110, 104, 131],
@@ -242,8 +234,7 @@ var getPartList = function (id) {
 				];
             return;
         case "dropdownButtonIronman":
-            console.log("ironman");
-			partList = [
+            partList = [
 				[5, 19, 29, 476],
 				[10, 52, 99, 529],
 				[108, 110, 104, 91],
@@ -262,8 +253,7 @@ var getPartList = function (id) {
 				];
             return;
 		case "dropdownButtonSith":
-            console.log("sith");
-			partList = [
+            partList = [
 				[5, 19, 29, 877],
 				[255, 240, 58, 92],
 				[10, 52, 99, 447],
@@ -279,8 +269,7 @@ var getPartList = function (id) {
 				];
 			return;
 		case "dropdownButtonHogwarts":
-            console.log("hogwarts");
-			partList = [
+            partList = [
 				[5, 19, 29, 593],
 				[0, 85, 191, 431],
 				[75, 159, 74, 4],
@@ -321,6 +310,7 @@ const generateValidColoringAndDraw = async () => {
 var generateValidColoring = function () {
 	
 	var colorList = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
+	var colorList2 = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
 	
 	var usePartLimitsButton = document.getElementById("unlimitedPartsButton");
 	var limitedParts = !(usePartLimitsButton.classList.value.includes("active"));
@@ -334,13 +324,12 @@ var generateValidColoring = function () {
 		if (partLimits3Button.classList.value.includes("active")) { var partMultiplier = 3; }
 		var partLimits4Button = document.getElementById("partLimits4Button");
 		if (partLimits4Button.classList.value.includes("active")) { var partMultiplier = 4; }
-		console.log(partMultiplier);
+
 		// Adjust number of parts in partList
-		console.log(colorList[1][3]);
 		for (var col = 0; col < colorList.length; col++) {
 			colorList[col][3] = colorList[col][3] * partMultiplier;
 		}
-		console.log(colorList[1][3]);
+		console.log(colorList);
 	}
 	
 	// Calculate distance of all pixels to all colors
@@ -350,115 +339,201 @@ var generateValidColoring = function () {
 	var outIm = createArray(imageData.width, imageData.height, 3);
 	var outCol = createArray(imageData.width, imageData.height);
 	
-	console.log('starting first coloring for loop');
+	console.log(imageData.data)
+	
+	console.log('starting coloring');
+	var allBlack = true;
 	for (var x = 0; x < imageData.width; x++) {
         for (var y = 0; y < imageData.height; y++) {
 			var index = (y*imageData.width + x) * 4;
-            var red = imageData.data[index] + Math.random()-0.5;
-            var green = imageData.data[index + 1] + Math.random()-0.5;
-            var blue = imageData.data[index + 2] + Math.random()-0.5;
+            var red = imageData.data[index] + Math.random()*13-1.5;
+            var green = imageData.data[index + 1] + Math.random()*13-1.5;
+            var blue = imageData.data[index + 2] + Math.random()*13-1.5;
+			
+			if (red != 0 || green != 0 || blue != 0) {
+				allBlack = false
+			}
 			
 			// Calculate distance of color of each pixel 
 			// to each color in the list
 			// and get best available color at the same time
-			var bestCol = 0;
-			var bestDist = Infinity;
+			//var bestCol = 0;
+			//var bestDist = Infinity;
 			for (var col = 0; col < colorList.length; col++) {
 				distMat[x][y][col] = Math.pow(red-colorList[col][0], 2) + Math.pow(green-colorList[col][1], 2) + Math.pow(blue-colorList[col][2], 2);
-				if (distMat[x][y][col] < bestDist && colorList[col][3] > 0) { // check that best color is still available
-					bestDist = distMat[x][y][col];
-					bestCol = col;
+				//if (distMat[x][y][col] < bestDist && colorList[col][3] > 0) { // check that best color is still available
+				//	bestDist = distMat[x][y][col];
+				//	bestCol = col;
+				//}
+			}
+		}
+	}
+	
+	// Deep copy distMat
+	var distMatOrig = JSON.parse(JSON.stringify(distMat));
+	
+	var keepRunning = true;
+	while (keepRunning) {
+		// Get next best brick to place with minimal dist
+		var bestDist = Infinity;
+		var bestX = -1;
+		var bestY = -1;
+		var bestCol = -1;
+		for (var x = 0; x < imageData.width; x++) {
+			for (var y = 0; y < imageData.height; y++) {
+				for (var col = 0; col < colorList.length; col++) {
+					if (distMat[x][y][col] < bestDist && (colorList[col][3] > 0) || !limitedParts) { // check that best color is still available
+						bestDist = distMat[x][y][col];
+						bestX = x;
+						bestY = y;
+						bestCol = col;
+					}
 				}
 			}
-			outIm[x][y][0] = colorList[bestCol][0];
-			outIm[x][y][1] = colorList[bestCol][1];
-			outIm[x][y][2] = colorList[bestCol][2];
-			outCol[x][y] = bestCol;
-			pxCount = pxCount + 1;
-			if (limitedParts) {
-				colorList[bestCol][3] = colorList[bestCol][3] - 1;
+		}
+		
+		// place part
+		outIm[bestX][bestY][0] = colorList[bestCol][0];
+		outIm[bestX][bestY][1] = colorList[bestCol][1];
+		outIm[bestX][bestY][2] = colorList[bestCol][2];
+		
+		for (var col = 0; col < colorList.length; col++) { // this x,y pos is set now
+			distMat[bestX][bestY][col] = Infinity;
+		}
+		
+		outCol[bestX][bestY] = bestCol;
+		pxCount = pxCount + 1;
+		
+		// Reduce count of that color in pool
+		if (limitedParts) {
+			colorList[bestCol][3] = colorList[bestCol][3] - 1;
+		}
+		
+		// Check that there are still parts left, otherwise exit
+		var stillPartsAvailable = false;
+		for (var col = 0; col < colorList.length; col++){
+			if (colorList[col][3] > 0) {
+				stillPartsAvailable = true;
+			}
+		}
+		if (!stillPartsAvailable) {
+			alert('Insufficient parts for this specific mosaic size.')
+			return outIm;
+		}
+		
+		// Exit while loop if done
+		if (pxCount == (imageData.width * imageData.height)) {
+			keepRunning = false;
+		}
+	}
+	
+	outCol2 = JSON.parse(JSON.stringify(outCol));
+	var finalDist = 0;
+	for (var x = 0; x < imageData.width; x++) {
+        for (var y = 0; y < imageData.height; y++) {
+			for (var col = 0; col < colorList.length; col++) {
+				finalDist += distMatOrig[x][y][col];
 			}
 		}
 	}
 	console.log('first coloring done');
 	
-	var stillPartsAvailable = false;
-	for (var col = 0; col < colorList.length; col++){
-		if (colorList[col][3] > 0) {
-			stillPartsAvailable = true;
-		}
-	}
-	
-	if (!stillPartsAvailable) {
-		alert('Insufficient parts for this specific mosaic size.')
-		return outIm;
-	}
-	
-	var distMatOrig = distMat;
-	
 	if (limitedParts) {
 		console.log('optimizing');
-		var keepRunning = true;
+		keepRunning = true;
         var count = 0;
 		
 		while (keepRunning && count < 100) {
 			count = count +1;
 			keepRunning = false;
+			var swapCount = 0;
+			var swapPoolCount = 0;
 			console.log(`  iteration ${count}`);
 			for (var x = 0; x < imageData.width; x++) {
 				for (var y = 0; y < imageData.height; y++) {
-					bestCols = [];
-					bestDist = Infinity;
+					
+					var bestCols = [];
 					for (var col = 0; col < colorList.length; col++) {
-						if (distMatOrig[x][y][col] < distMatOrig[x][y][outCol[x][y]]) { // check that best color is still available
-							bestDist = distMat[x][y][col];
+						if (distMatOrig[x][y][col] < distMatOrig[x][y][outCol[x][y]]) {
 							bestCols.push(col);
 						}
 					}
 					if (bestCols.length > 0) {
 						// There would be a better choice for this pixel -> can we swap?
+						var bestCoice = Infinity;
+						var bestCol = -1;
+						var bestX = -1;
+						var bestY = -1;
+						
 						for (var col = 0; col < bestCols.length; col++) {
 							var loss = distMatOrig[x][y][outCol[x][y]] - distMatOrig[x][y][bestCols[col]]; // what did we loose by suboptimal choice?
-							
-							x2loop: // This is a label name
-								for (var x2 = 0; x2 < imageData.width; x2++) {
-									for (var y2 = 0; y2 < imageData.height; y2++) {
-										if (outCol[x2][y2] == bestCols[col]) {
-											// Possible swap candidate
-											var gain = distMatOrig[x2][y2][outCol[x][y]] - distMatOrig[x2][y2][bestCols[col]]; // what can we gain by swapping?
-											if (gain - loss < 0) {
-												// -> swap
-												outIm[x][y][0] = colorList[bestCols[col]][0];
-												outIm[x][y][1] = colorList[bestCols[col]][1];
-												outIm[x][y][2] = colorList[bestCols[col]][2];
-												outIm[x2][y2][0] = colorList[outCol[x][y]][0];
-												outIm[x2][y2][1] = colorList[outCol[x][y]][1];
-												outIm[x2][y2][2] = colorList[outCol[x][y]][2];
-												outCol[x][y] = bestCols[col];
-												outCol[x2][y2] = outCol[x][y];
-												
-												keepRunning = true;
-												break x2loop;
-											} else if (colorList[bestCols[col]][3] > 0) {
-												// There is a better color left in the pool -> swap
-												colorList[bestCols[col]][3] = colorList[bestCols[col]][3] - 1;
-												colorList[outCol[x][y]][3] = colorList[outCol[x][y]][3] + 1;
-												outIm[x][y][0] = colorList[bestCols[col]][0];
-												outIm[x][y][1] = colorList[bestCols[col]][1];
-												outIm[x][y][2] = colorList[bestCols[col]][2];
-												keepRunning = true;
-												break x2loop;
-											}
+							var gain = 0;
+							for (var x2 = 0; x2 < imageData.width; x2++) {
+								for (var y2 = 0; y2 < imageData.height; y2++) {
+									if (outCol[x2][y2] == bestCols[col]) {
+										// Possible swap candidate
+										gain = distMatOrig[x2][y2][outCol[x][y]] - distMatOrig[x2][y2][bestCols[col]]; // what can we gain by swapping?
+										if (gain - loss < bestCoice) {
+											bestCoice = gain - loss;
+											bestCol = col;
+											bestX = x2;
+											bestY = y2;
 										}
 									}
 								}
+							}
+						}
+						if (bestCoice < 0) {
+							swapCount += 1;
+							// -> swap
+							outIm[x][y][0] = colorList[bestCols[bestCol]][0];
+							outIm[x][y][1] = colorList[bestCols[bestCol]][1];
+							outIm[x][y][2] = colorList[bestCols[bestCol]][2];
+							outIm[bestX][bestY][0] = colorList[outCol[x][y]][0];
+							outIm[bestX][bestY][1] = colorList[outCol[x][y]][1];
+							outIm[bestX][bestY][2] = colorList[outCol[x][y]][2];
+							outCol[bestX][bestY] = outCol[x][y];
+							outCol[x][y] = bestCols[bestCol];
+							
+							keepRunning = true;
+						} else {
+							// Check pool
+							var bestLoss = -Infinity;
+							var bestCol = -1;
+							for (var col = 0; col < bestCols.length; col++) {
+								if (colorList[bestCols[col]][3] > 0) {
+									loss = distMatOrig[x][y][outCol[x][y]] - distMatOrig[x][y][bestCols[col]];
+									if (loss > bestLoss) {
+										bestLoss = loss;
+										bestCol = col;
+									}
+								}
+							}
+							if (bestLoss > 0) {
+								swapPoolCount += 1;
+								// There is a better color left in the pool -> swap
+								colorList[bestCols[bestCol]][3] = colorList[bestCols[bestCol]][3] - 1;
+								colorList[outCol[x][y]][3] = colorList[outCol[x][y]][3] + 1;
+								outIm[x][y][0] = colorList[bestCols[bestCol]][0];
+								outIm[x][y][1] = colorList[bestCols[bestCol]][1];
+								outIm[x][y][2] = colorList[bestCols[bestCol]][2];
+								outCol[x][y] = bestCols[bestCol];
+								keepRunning = true;
+							}
 						}
 					}
 				}
 			}
+			console.log(`swapped ${swapCount} parts + ${swapPoolCount} with pool`);
 		}
 	}
 	
+	var finalDist = 0;
+	for (var x = 0; x < imageData.width; x++) {
+        for (var y = 0; y < imageData.height; y++) {
+			finalDist += distMatOrig[x][y][outCol[x][y]];
+		}
+	}
 	
 	return outIm;
 	
