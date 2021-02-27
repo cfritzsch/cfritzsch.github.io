@@ -1,11 +1,14 @@
 const imageFile = document.getElementById("imageFile");
 const previewImage = document.getElementById("previewImg");
-//const PreviewDefaultText = document.getElementById("image-preview__default-text");
 const widthInput = document.getElementById("widthInputValue");
 const heightInput = document.getElementById("heightInputValue");
 
+document.getElementById("buttonCalculate").disabled = true;
+document.getElementById("buttonDownloadPDF").disabled = true;
+
 var imageData = [];
 var partList = [];
+var finalMosaicIm = [];
 
 imageFile.addEventListener("change", function() {
     const file = this.files[0]
@@ -31,6 +34,7 @@ imageFile.addEventListener("change", function() {
             previewImage.setAttribute("src", this.result);
 
 			document.getElementById("buttonCalculate").disabled = false;
+			document.getElementById("buttonDownloadPDF").disabled = true;
         })
 		
 		// Reset canvas
@@ -44,7 +48,7 @@ imageFile.addEventListener("change", function() {
         previewImage.style.display = null;
 
         document.getElementById("buttonCalculate").disabled = true;
-		
+		document.getElementById("buttonDownloadPDF").disabled = true;
 
         previewImage.setAttribute("src", "");
         RGBResultTextarea.value = "";
@@ -63,8 +67,7 @@ partListTableAddRowButton.addEventListener('click', function () {
 }) */
 
 
-var calculateButton = document.getElementById("buttonCalculate")
-calculateButton.addEventListener('click', function () {
+document.getElementById("buttonCalculate").addEventListener('click', function () {
 	var resizeCanvas = document.createElement('canvas');
 	
 	resizeCanvas.width = widthInput.value;
@@ -83,6 +86,12 @@ calculateButton.addEventListener('click', function () {
 	}, 200);
     
 })
+
+
+document.getElementById("buttonDownloadPDF")
+    .addEventListener("click", async () => {
+        await generateInstructions();
+    });
 
 
 // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
@@ -303,11 +312,19 @@ const generateValidColoringAndDraw = async () => {
     const im = await generateValidColoring();
 	console.log('coloring done -> drawing')
     drawMosaic(im);
+	finalMosaicIm = im;
+	document.getElementById("buttonDownloadPDF").disabled = false;
 }
 
 
 
-var generateValidColoring = function () {
+async function generateValidColoring () {
+	
+	document.getElementById("calculate-progress-bar").style.width = "100%";
+	document.getElementById("calculate-progress-bar").style.width = "0%";
+	document.getElementById("calculate-progress-container").hidden = false;
+	document.getElementById("buttonCalculate").hidden = true;
+	await sleep(5);
 	
 	var colorList = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
 	var colorList2 = JSON.parse(JSON.stringify(partList)); // bad way to do a deep copy, but it works
@@ -369,6 +386,10 @@ var generateValidColoring = function () {
 		}
 	}
 	
+	document.getElementById("calculate-progress-bar").style.width = "10%";
+	document.getElementById("calculate-progress-bar").innerHTML = "Initial guess";
+	await sleep(5);
+	
 	// Deep copy distMat
 	var distMatOrig = JSON.parse(JSON.stringify(distMat));
 	
@@ -382,7 +403,7 @@ var generateValidColoring = function () {
 		for (var x = 0; x < imageData.width; x++) {
 			for (var y = 0; y < imageData.height; y++) {
 				for (var col = 0; col < colorList.length; col++) {
-					if (distMat[x][y][col] < bestDist && (colorList[col][3] > 0) || !limitedParts) { // check that best color is still available
+					if (distMat[x][y][col] < bestDist && ((colorList[col][3] > 0) || !limitedParts)) { // check that best color is still available
 						bestDist = distMat[x][y][col];
 						bestX = x;
 						bestY = y;
@@ -403,6 +424,11 @@ var generateValidColoring = function () {
 		
 		outCol[bestX][bestY] = bestCol;
 		pxCount = pxCount + 1;
+		
+		if (pxCount % 100 == 0) {
+			document.getElementById("calculate-progress-bar").style.width = `${10+20*pxCount/(imageData.width*imageData.height)}%`;
+			await sleep(5);
+		}
 		
 		// Reduce count of that color in pool
 		if (limitedParts) {
@@ -437,6 +463,8 @@ var generateValidColoring = function () {
 		}
 	}
 	console.log('first coloring done');
+	//document.getElementById("calculate-progress-bar").style.width = "20%";
+	//await sleep(5);
 	
 	if (limitedParts) {
 		console.log('optimizing');
@@ -445,6 +473,11 @@ var generateValidColoring = function () {
 		
 		while (keepRunning && count < 100) {
 			count = count +1;
+			
+			document.getElementById("calculate-progress-bar").style.width = `${30+(Math.sqrt(count) / 10) * 70}%`;
+			document.getElementById("calculate-progress-bar").innerHTML = `Optimizing - Iteration ${count}`;
+			await sleep(5);
+
 			keepRunning = false;
 			var swapCount = 0;
 			var swapPoolCount = 0;
@@ -532,8 +565,12 @@ var generateValidColoring = function () {
 	for (var x = 0; x < imageData.width; x++) {
         for (var y = 0; y < imageData.height; y++) {
 			finalDist += distMatOrig[x][y][outCol[x][y]];
+			outIm[x][y][3] = outCol[x][y];
 		}
 	}
+	
+	document.getElementById("calculate-progress-container").hidden = true;
+	document.getElementById("buttonCalculate").hidden = false;
 	
 	return outIm;
 	
@@ -551,3 +588,187 @@ function createArray(length) {
 
     return arr;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function generateInstructionTitlePDFPage(pdf, timeString) {
+	
+	const pdfWidth = pdf.internal.pageSize.getWidth();
+	const pdfHeight = pdf.internal.pageSize.getHeight();
+	
+	const canvas = document.getElementById("previewMosaicCanvas");
+    const ctx = canvas.getContext("2d");
+	
+	const imgData = canvas.toDataURL("image/jpeg", 0.5);
+
+	const sectionSize = 16;
+	const width = Math.ceil(finalMosaicIm.length/sectionSize)*sectionSize;
+	const height = Math.ceil(finalMosaicIm[0].length/sectionSize)*sectionSize;
+	const realWidth = finalMosaicIm.length;
+	const realHeight = finalMosaicIm[0].length;
+	const numSections = Math.ceil(width / sectionSize) * Math.ceil(height / sectionSize);
+
+	document.getElementById("pdf-progress-bar").style.width = `${1 / (numSections + 1) * 100}%`;
+	//await sleep(10);
+
+	const canvasWidthMM = Math.min(pdfWidth * 0.6, ((pdfHeight - 100) * width) / height);
+	const canvasHeightMM = Math.min((pdfHeight - 100), (pdfWidth * 0.6 * height) / width);
+	pdf.addImage(imgData, "JPEG",
+		pdfWidth * 0.2,	50,
+		canvasWidthMM * realWidth / width, canvasHeightMM * realHeight / height,
+		"",	"MEDIUM");
+		
+	console.log(`w ${width} h ${height} rw ${realWidth} rh ${realHeight} ns ${numSections} cw ${canvasWidthMM} ch ${canvasHeightMM} iw ${canvasWidthMM * realWidth / width} ih ${canvasHeightMM * realHeight / height}`);
+
+	
+	pdf.setFontSize(28);
+	pdf.setTextColor(0,0,0); 
+	pdf.text(30, 25, 'Custom Brick Mosaic');
+
+	pdf.setFontSize(14);
+	pdf.text(30, 33, 'Downloaded from custombrickmosaic.github.io');
+	
+	pdf.text(30, 41, `Resolution: ${width} x ${height}`);
+	
+	const numSectionsX = Math.ceil(width / sectionSize);
+	const numSectionsY = Math.ceil(height / sectionSize);
+	
+	pdf.setLineWidth(2)
+	pdf.setDrawColor(200,200,200);
+	pdf.setFontSize(28);
+	pdf.setTextColor(200,200,200); 
+	for (var x = 0; x < numSectionsX; x++) {
+		for (var y = 0; y < numSectionsY; y++) {
+			pdf.rect(pdfWidth * 0.2 + x / numSectionsX * canvasWidthMM, 50 + y / numSectionsY * canvasHeightMM, canvasWidthMM / numSectionsX, canvasHeightMM / numSectionsY, 'S');
+			pdf.text(pdfWidth * 0.2 + (x + 0.5) / numSectionsX * canvasWidthMM, 50 + (y + 0.5) / numSectionsY * canvasHeightMM, `${x + y*Math.ceil(height / sectionSize) + 1}`);
+		}
+	}
+	
+	// Footer
+	pdf.setFontSize(11);
+	pdf.text(30, pdfHeight - 20, 'Downloaded from custombrickmosaic.github.io ');
+	pdf.text(30, pdfHeight - 15, `${timeString}`);
+	pdf.text(pdfWidth - 40, pdfHeight - 15, `Page 1 / ${numSectionsX*numSectionsY+1}`);
+	
+}
+
+
+
+
+function generateInstructionPagePDF( pdf, sectionNumber, timeString ) {
+	
+	const pdfWidth = pdf.internal.pageSize.getWidth();
+	const pdfHeight = pdf.internal.pageSize.getHeight();
+
+	const sectionSize = 16;
+	const radius = pdfWidth * 0.7 / sectionSize / 2;
+	
+	const width = finalMosaicIm.length;
+	const height = finalMosaicIm[0].length;
+	const numSectionsX = Math.ceil(width / sectionSize);
+	const numSectionsY = Math.ceil(height / sectionSize);
+	const xOffset = (sectionNumber) % numSectionsX * sectionSize;
+	const yOffset = Math.floor((sectionNumber) / numSectionsX) * sectionSize;
+	
+	console.log(`section ${sectionNumber} xoff ${xOffset} yoff ${yOffset}`)
+
+	pdf.setFontSize(28);
+	pdf.setTextColor(0,0,0); 
+	pdf.text(30, 25, `Section ${sectionNumber+1}`);
+	
+	pdf.setFillColor(0,0,0);
+	pdf.rect(pdfWidth * 0.15, pdfHeight * 0.15, pdfWidth * 0.7, pdfWidth * 0.7, 'F');
+	
+	pdf.setLineWidth(0.3);
+	pdf.setFontSize(12); 
+	for (var x = 0; x < sectionSize; x++) {
+		for (var y = 0; y < sectionSize; y++) {
+			if (((x + xOffset) < width) && ((y + yOffset) < height)) {
+				if ((finalMosaicIm[x + xOffset][y + yOffset][0]+finalMosaicIm[x + xOffset][y + yOffset][1]+finalMosaicIm[x + xOffset][y + yOffset][2]) > 300) {
+					pdf.setDrawColor(0,0,0);
+					pdf.setTextColor(0,0,0);
+				} else {
+					pdf.setDrawColor(255,255,255);
+					pdf.setTextColor(255,255,255);
+				}
+				pdf.setFillColor(finalMosaicIm[x + xOffset][y + yOffset][0], finalMosaicIm[x + xOffset][y + yOffset][1], finalMosaicIm[x + xOffset][y + yOffset][2]);
+
+				const x2 = pdfWidth * 0.15 + (x * 2 + 1) * radius;
+				const y2 = pdfHeight * 0.15 + (y * 2 + 1) * radius;
+				pdf.circle(x2, y2, radius-0.5, 'FD');
+				pdf.text(x2-1-2*(finalMosaicIm[x + xOffset][y + yOffset][3] > 8), y2+0.5, `${finalMosaicIm[x + xOffset][y + yOffset][3]+1}`);
+			}
+		}
+	}
+	
+	// Footer
+	pdf.setFontSize(11);
+	pdf.setTextColor(200,200,200);
+	pdf.text(30, pdfHeight - 20, 'Downloaded from custombrickmosaic.github.io ');
+	pdf.text(30, pdfHeight - 15, `${timeString}`);
+	pdf.text(pdfWidth - 40, pdfHeight - 15, `Page ${sectionNumber+2} / ${numSectionsX*numSectionsY+1}`);
+}	
+
+
+
+
+
+async function generateInstructions() {
+	
+	const today = new Date(Date.now());
+	
+	document.getElementById("pdf-progress-bar").style.width = "0%";
+	document.getElementById("pdf-progress-container").hidden = false;
+	document.getElementById("buttonDownloadPDF").hidden = true;
+	
+	let pdf = new jsPDF({
+		orientation: "p",
+		unit: "mm",
+		format: "a4"
+	});
+
+	const pdfWidth = pdf.internal.pageSize.getWidth();
+	const pdfHeight = pdf.internal.pageSize.getHeight();
+
+	const sectionSize = 16;
+	const width = Math.ceil(finalMosaicIm.length/sectionSize)*sectionSize;
+	const height = Math.ceil(finalMosaicIm[0].length/sectionSize)*sectionSize;
+	const numSections = Math.ceil(width / sectionSize) * Math.ceil(height / sectionSize);
+	
+	generateInstructionTitlePDFPage(pdf, today.toUTCString());
+	document.getElementById("pdf-progress-bar").style.width = `${1/(numSections + 1) * 100}%`;
+	await sleep(50);
+
+	// Add one page per section
+	for (var i = 0; i < numSections; i++) {
+		pdf.addPage();
+		
+		generateInstructionPagePDF(pdf, i, today.toUTCString());
+		document.getElementById("pdf-progress-bar").style.width = `${(i + 2)/(numSections + 1) * 100}%`;
+		await sleep(50);
+    }
+	pdf.save("Custom-Brick-Mosaic-Instructions.pdf");
+	
+	document.getElementById("pdf-progress-container").hidden = true;
+    document.getElementById("buttonDownloadPDF").hidden = false;
+}
+
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
