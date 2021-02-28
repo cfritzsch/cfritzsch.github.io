@@ -80,8 +80,6 @@ document.getElementById("buttonCalculate").addEventListener('click', function ()
 	
 	setTimeout(() => {  
 		imageData = context.getImageData(0, 0, resizeCanvas.width, resizeCanvas.height);
-		//generateValidColoring().then(function(im){drawMosaic()});
-		//drawPreview();
 		generateValidColoringAndDraw();
 	}, 200);
     
@@ -130,38 +128,6 @@ for (var i = 0; i < myButtonGroup.length; i++) {
 }
 
 
-
-var drawPreview = function () {
-    var canvas = document.getElementById("previewMosaicCanvas")
-    var context = canvas.getContext("2d");
-
-    canvas.width = imageData.width*30;
-    canvas.height = imageData.height*30;
-
-    for (var x = 0; x < imageData.width; x++) {
-        for (var y = 0; y < imageData.height; y++) {
-            var index = (y*imageData.width + x) * 4;
-            var red = imageData.data[index];
-            var green = imageData.data[index + 1];
-            var blue = imageData.data[index + 2];
-            //var alpha = imageData.data[index + 3];
-
-            var centerX = (x+0.5) * canvas.width / (imageData.width);
-            var centerY = (y+0.5) * canvas.height / (imageData.height);
-            var radius = canvas.width / (imageData.width+1)/2.1;
-
-            context.fillStyle = rgbToHex(`(${red},${green},${blue})`);
-            context.beginPath();
-            context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-            context.closePath();
-            context.fill();
-        }
-    }
-
-    context.fillStyle = "black";
-    context.globalCompositeOperation = 'destination-over'
-    context.fillRect(0, 0, canvas.width, canvas.height);
-}
 
 
 var drawMosaic = function (im) {
@@ -293,6 +259,28 @@ var getPartList = function (id) {
 				[255, 255, 255, 369]
 				];
 			return;
+		case "dropdownButtonPortrait":
+			partList = [
+				[5, 19, 29, 900],
+				[108, 110, 104, 900],
+				[160, 165, 169, 900],
+				[255, 255, 255, 900],
+				[242, 205, 55, 900]
+				];
+			return;
+		case "dropdownButtonMickey":
+			partList = [
+				[5, 19, 29, 662],
+				[10, 52, 99, 409],
+				[108, 110, 104, 79],
+				[53, 33, 0, 76],
+				[114, 14, 15, 96],
+				[160, 165, 169, 59],
+				[201, 26, 9, 213],
+				[228, 205, 158, 32],
+				[255, 255, 255, 835]
+				];
+			return;
         default:
             console.log("unknown");
             break;
@@ -310,6 +298,9 @@ var setTableItemsFromPartList = function (partList) {
 
 const generateValidColoringAndDraw = async () => {
     const im = await generateValidColoring();
+	if (im === undefined) {
+		return
+	}
 	console.log('coloring done -> drawing')
     drawMosaic(im);
 	finalMosaicIm = im;
@@ -386,7 +377,14 @@ async function generateValidColoring () {
 		}
 	}
 	
-	document.getElementById("calculate-progress-bar").style.width = "10%";
+	if (allBlack) {
+		alert('Oops! Something went wrong while decoding the image. Please start again from step 1.');
+		document.getElementById("calculate-progress-container").hidden = true;
+		document.getElementById("buttonCalculate").hidden = false;
+		return;
+	}
+	
+	document.getElementById("calculate-progress-bar").style.width = "15%";
 	document.getElementById("calculate-progress-bar").innerHTML = "Initial guess";
 	await sleep(5);
 	
@@ -426,7 +424,7 @@ async function generateValidColoring () {
 		pxCount = pxCount + 1;
 		
 		if (pxCount % 100 == 0) {
-			document.getElementById("calculate-progress-bar").style.width = `${10+20*pxCount/(imageData.width*imageData.height)}%`;
+			document.getElementById("calculate-progress-bar").style.width = `${15+20*pxCount/(imageData.width*imageData.height)}%`;
 			await sleep(5);
 		}
 		
@@ -463,6 +461,7 @@ async function generateValidColoring () {
 		}
 	}
 	console.log('first coloring done');
+	drawMosaic(outIm);
 	//document.getElementById("calculate-progress-bar").style.width = "20%";
 	//await sleep(5);
 	
@@ -474,7 +473,7 @@ async function generateValidColoring () {
 		while (keepRunning && count < 100) {
 			count = count +1;
 			
-			document.getElementById("calculate-progress-bar").style.width = `${30+(Math.sqrt(count) / 10) * 70}%`;
+			document.getElementById("calculate-progress-bar").style.width = `${35+(Math.sqrt(count) / 10) * 65}%`;
 			document.getElementById("calculate-progress-bar").innerHTML = `Optimizing - Iteration ${count}`;
 			await sleep(5);
 
@@ -593,17 +592,7 @@ function createArray(length) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-function generateInstructionTitlePDFPage(pdf, timeString) {
+function generatePDFTitlePage(pdf, timeString) {
 	
 	const pdfWidth = pdf.internal.pageSize.getWidth();
 	const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -638,21 +627,19 @@ function generateInstructionTitlePDFPage(pdf, timeString) {
 	pdf.text(30, 25, 'Custom Brick Mosaic');
 
 	pdf.setFontSize(14);
-	pdf.text(30, 33, 'Downloaded from custombrickmosaic.github.io');
-	
-	pdf.text(30, 41, `Resolution: ${width} x ${height}`);
+	pdf.text(30, 38, `Resolution: ${width} x ${height}`);
 	
 	const numSectionsX = Math.ceil(width / sectionSize);
 	const numSectionsY = Math.ceil(height / sectionSize);
 	
-	pdf.setLineWidth(2)
+	pdf.setLineWidth(1.5)
 	pdf.setDrawColor(200,200,200);
 	pdf.setFontSize(28);
 	pdf.setTextColor(200,200,200); 
 	for (var x = 0; x < numSectionsX; x++) {
 		for (var y = 0; y < numSectionsY; y++) {
 			pdf.rect(pdfWidth * 0.2 + x / numSectionsX * canvasWidthMM, 50 + y / numSectionsY * canvasHeightMM, canvasWidthMM / numSectionsX, canvasHeightMM / numSectionsY, 'S');
-			pdf.text(pdfWidth * 0.2 + (x + 0.5) / numSectionsX * canvasWidthMM, 50 + (y + 0.5) / numSectionsY * canvasHeightMM, `${x + y*Math.ceil(height / sectionSize) + 1}`);
+			pdf.text(pdfWidth * 0.2 + (x + 0.4) / numSectionsX * canvasWidthMM, 50 + (y + 0.5) / numSectionsY * canvasHeightMM, `${x + y*Math.ceil(height / sectionSize) + 1}`);
 		}
 	}
 	
@@ -667,7 +654,7 @@ function generateInstructionTitlePDFPage(pdf, timeString) {
 
 
 
-function generateInstructionPagePDF( pdf, sectionNumber, timeString ) {
+function generatePDFSectionPage( pdf, sectionNumber, timeString ) {
 	
 	const pdfWidth = pdf.internal.pageSize.getWidth();
 	const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -708,7 +695,7 @@ function generateInstructionPagePDF( pdf, sectionNumber, timeString ) {
 				const x2 = pdfWidth * 0.15 + (x * 2 + 1) * radius;
 				const y2 = pdfHeight * 0.15 + (y * 2 + 1) * radius;
 				pdf.circle(x2, y2, radius-0.5, 'FD');
-				pdf.text(x2-1-2*(finalMosaicIm[x + xOffset][y + yOffset][3] > 8), y2+0.5, `${finalMosaicIm[x + xOffset][y + yOffset][3]+1}`);
+				pdf.text(x2-1-1.5*(finalMosaicIm[x + xOffset][y + yOffset][3] > 8), y2+1.5, `${finalMosaicIm[x + xOffset][y + yOffset][3]+1}`);
 			}
 		}
 	}
@@ -733,21 +720,12 @@ async function generateInstructions() {
 	document.getElementById("pdf-progress-container").hidden = false;
 	document.getElementById("buttonDownloadPDF").hidden = true;
 	
-	let pdf = new jsPDF({
-		orientation: "p",
-		unit: "mm",
-		format: "a4"
-	});
-
-	const pdfWidth = pdf.internal.pageSize.getWidth();
-	const pdfHeight = pdf.internal.pageSize.getHeight();
-
 	const sectionSize = 16;
-	const width = Math.ceil(finalMosaicIm.length/sectionSize)*sectionSize;
-	const height = Math.ceil(finalMosaicIm[0].length/sectionSize)*sectionSize;
-	const numSections = Math.ceil(width / sectionSize) * Math.ceil(height / sectionSize);
+	const numSections = Math.ceil(finalMosaicIm.length / sectionSize) * Math.ceil(finalMosaicIm[0].length / sectionSize);
 	
-	generateInstructionTitlePDFPage(pdf, today.toUTCString());
+	let pdf = new jsPDF({orientation: "p", unit: "mm", format: "a4"});
+	
+	generatePDFTitlePage(pdf, today.toUTCString());
 	document.getElementById("pdf-progress-bar").style.width = `${1/(numSections + 1) * 100}%`;
 	await sleep(50);
 
@@ -755,7 +733,7 @@ async function generateInstructions() {
 	for (var i = 0; i < numSections; i++) {
 		pdf.addPage();
 		
-		generateInstructionPagePDF(pdf, i, today.toUTCString());
+		generatePDFSectionPage(pdf, i, today.toUTCString());
 		document.getElementById("pdf-progress-bar").style.width = `${(i + 2)/(numSections + 1) * 100}%`;
 		await sleep(50);
     }
