@@ -14,6 +14,15 @@ function init() {
 	document.getElementById("saturationRange").value = 0;
 	document.getElementById("valueRange").value = 0;
 	document.getElementById("contrastRange").value = 0;
+	document.getElementById("widthInputValue").value = 48;
+	document.getElementById("heightInputValue").value = 48
+	document.getElementById("inputBeatles").value = 0;
+	document.getElementById("inputMonroe").value = 0;
+	document.getElementById("inputIronMan").value = 0;
+	document.getElementById("inputSith").value = 0;
+	document.getElementById("inputHogwarts").value = 0;
+	document.getElementById("inputMickey").value = 0;
+	document.getElementById("inputPortrait").value = 0;
 
 	var numReqParts = document.getElementById("heightInputValue").value * document.getElementById("widthInputValue").value;
 	document.getElementById("requiredPartsString").innerHTML = `Required parts: ${numReqParts}`;
@@ -24,8 +33,7 @@ function init() {
 init();
 
 document.getElementById("imageFile").addEventListener("change", function() {
-//function preview_image(event) {
-	//if(event.target.files[0].type.match(/image.*/)) {
+
 	validImagePresent = false;
 	if(this.files[0].type.match(/image.*/)) {
 		var reader = new FileReader();
@@ -38,8 +46,7 @@ document.getElementById("imageFile").addEventListener("change", function() {
 					
 					drawPreviewImage();
 					
-					document.getElementById("cropOrScaleImageBtnGroup").hidden = false;
-					document.getElementById("thumbnailCanvas").hidden = false;
+					document.getElementById("imageAdjustmentsRow").hidden = false;
 					document.getElementById("buttonDownloadPDF").disabled = true;
 					
 					validImagePresent = true;
@@ -51,8 +58,7 @@ document.getElementById("imageFile").addEventListener("change", function() {
 				})
 				.catch((encodingError) => {
 					console.log(encodingError);
-					document.getElementById("thumbnailCanvas").hidden = true;
-					document.getElementById("cropOrScaleImageBtnGroup").hidden = true;
+					document.getElementById("imageAdjustmentsRow").hidden = true;
 					document.getElementById("buttonCalculate").disabled = true;
 					document.getElementById("buttonDownloadPDF").disabled = true;
 				})
@@ -66,8 +72,7 @@ document.getElementById("imageFile").addEventListener("change", function() {
 		imageFilename = "";
 		previewImage.style.display = null;
 
-        document.getElementById("thumbnailCanvas").hidden = true;
-		document.getElementById("cropOrScaleImageBtnGroup").hidden = true;
+        document.getElementById("imageAdjustmentsRow").hidden = true;
         document.getElementById("buttonCalculate").disabled = true;
 		document.getElementById("buttonDownloadPDF").disabled = true;
 
@@ -119,6 +124,9 @@ document.getElementById("widthInputValue").addEventListener('change', async () =
 	var numReqParts = widthInput.value * document.getElementById("heightInputValue").value;
 	document.getElementById("requiredPartsString").innerHTML = `Required parts: ${numReqParts}`;
 	
+	var thumbnailCanvas = document.getElementById('thumbnailCanvas')
+	thumbnailCanvas.height = thumbnailCanvas.width * document.getElementById("heightInputValue").value / widthInput.value;
+	
 	var partCount = updatePartList();
 	if (validImagePresent && (numReqParts <= partCount)) {
 		document.getElementById("buttonCalculate").disabled = false;
@@ -140,6 +148,9 @@ document.getElementById("heightInputValue").addEventListener('change', async () 
 	
 	var numReqParts = document.getElementById("widthInputValue").value * heightInput.value;
 	document.getElementById("requiredPartsString").innerHTML = `Required parts: ${numReqParts}`;
+	
+	var thumbnailCanvas = document.getElementById('thumbnailCanvas')
+	thumbnailCanvas.height = thumbnailCanvas.width * heightInput.value / document.getElementById("widthInputValue").value;
 	
 	var partCount = updatePartList();
 	if (validImagePresent && (numReqParts <= partCount)) {
@@ -290,78 +301,69 @@ function hsv2rgb(h, s, v) {
     return [Math.round(f(5)*255), Math.round(f(3)*255), Math.round(f(1)*255)];
 }
 
-// input: h (offset) in [0,360] and s,v (offset) in [-1,1] - output: adjusted r,g,b
-function adjustHSV(r, g, b, h, s, v) {
-    const HSV = rgb2hsv(r, g, b);
-    const newH = (HSV[0] + Math.round(h)) % 360;
-    const newS = Math.min(Math.max(HSV[1] + s, 0), 1);
-    const newV = Math.min(Math.max(HSV[2] + v, 0), 1);
-	
-	return hsv2rgb(newH, newS, newV);
-}
 
-
-function contrastImage(imgData, contrast){  //input range [-100..100]
-    var d = imgData.data;
+function adjustImageContrast(imgData, contrast){  //input range [-100..100]
+    var imData = imgData.data;
     contrast = (contrast/100) + 1;  //convert to decimal & shift range: [0..2]
     var intercept = 128 * (1 - contrast);
-    for(var i=0;i<d.length;i+=4){   //r,g,b,a
-        d[i] = d[i]*contrast + intercept;
-        d[i+1] = d[i+1]*contrast + intercept;
-        d[i+2] = d[i+2]*contrast + intercept;
+    for(var i=0; i<imData.length; i+=4){   //r,g,b,a
+        imData[i]   = imData[i]   * contrast + intercept;
+        imData[i+1] = imData[i+1] * contrast + intercept;
+        imData[i+2] = imData[i+2] * contrast + intercept;
     }
     return imgData;
 }
 
 
-function drawPixelsOnCanvas(pixels, canvas) {
-    const context = canvas.getContext("2d");
-
-    const imageData = context.createImageData(canvas.width, canvas.height);
-    Object.keys(pixels).forEach(pixel => {
-        imageData.data[pixel] = pixels[pixel];
-    });
-    context.putImageData(imageData, 0, 0);
+function adjustImageHSV(imgData, h, s, v){  //h [0,360], s, v [-1, 1]
+    var imData = imgData.data;
+    for(var i=0; i<imData.length; i+=4){   //r,g,b,a
+		const HSV = rgb2hsv(imData[i], imData[i+1], imData[i+2]);
+		const newH = (HSV[0] + Math.round(h)) % 360;
+		const newS = Math.min(Math.max(HSV[1] + s, 0), 1);
+		const newV = Math.min(Math.max(HSV[2] + v, 0), 1);
+		const RGB = hsv2rgb(newH, newS, newV);
+        imData[i]   = RGB[0];
+        imData[i+1] = RGB[1];
+        imData[i+2] = RGB[2];
+    }
+    return imgData;
 }
 
 
-async function drawPreviewImage () {
+
+async function drawPreviewImage () { //hsvChanged, contrastChanged
 	const hueValue = document.getElementById("hueRange").value;
 	const saturationValue = document.getElementById("saturationRange").value;
 	const valueValue = document.getElementById("valueRange").value;
 	const contrastValue = document.getElementById("contrastRange").value;
+	const intermediateSize = 200;
 	
 	var tmpImage = [];
 	if ((hueValue != 0) || (saturationValue != 0) || (valueValue != 0) || (contrastValue != 0)) {
 		
 		var tmpCanvas = document.createElement('canvas');
-		tmpCanvas.width = previewImage.width;
-		tmpCanvas.height = previewImage.height;
+		tmpCanvas.width = intermediateSize;//previewImage.width;
+		tmpCanvas.height = intermediateSize;//previewImage.height;
 		
 		const context = tmpCanvas.getContext("2d");
-		context.drawImage(previewImage, 0, 0);
+		context.drawImage(previewImage, 0, 0, previewImage.width, previewImage.height, 0, 0, intermediateSize, intermediateSize);
 		var pixels = context.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height).data;
-		console.log(pixels)
-		for (let i = 0; i < pixels.length; i += 4) {
-			const filteredPixel = adjustHSV(pixels[i], pixels[i + 1], pixels[i + 2], hueValue, saturationValue/100, valueValue/100);
-			for (let j = 0; j < 3; j++) {
-				pixels[i + j] = filteredPixel[j];
-			}
-			pixels[i + 3] = 255;
-		}
 		
 		var imageData = context.createImageData(tmpCanvas.width, tmpCanvas.height);
 		Object.keys(pixels).forEach(pixel => {
 			imageData.data[pixel] = pixels[pixel];
 		});
-		//console.log(imageData)
+		console.log(imageData)
 		
-		imageData = contrastImage(imageData, contrastValue);
+		imageData = adjustImageHSV(imageData, hueValue, saturationValue/100, valueValue/100);
+		
+		imageData = adjustImageContrast(imageData, contrastValue);
 		
 		context.putImageData(imageData, 0, 0);
 		
 		var dataURL = tmpCanvas.toDataURL();
-		tmpImage = new Image(previewImage.width, previewImage.height);
+		tmpImage = new Image(intermediateSize, intermediateSize);
 		tmpImage.src = dataURL;
 		
 		await tmpImage.decode()
@@ -375,16 +377,16 @@ async function drawPreviewImage () {
 	
 	if (document.getElementById('cropCenterSquareButton').classList.value.includes("active")) {
 		thumbnailContext.drawImage(tmpImage, 
-						Math.max(0,(previewImage.width-previewImage.height/thumbnailCanvas.height*thumbnailCanvas.width)/2),
-						Math.max(0,(previewImage.height-previewImage.width/thumbnailCanvas.width*thumbnailCanvas.height)/2),
-						previewImage.width - Math.max(0,(previewImage.width-previewImage.height/thumbnailCanvas.height*thumbnailCanvas.width)),
-						previewImage.height - Math.max(0,(previewImage.height-previewImage.width/thumbnailCanvas.width*thumbnailCanvas.height)),
+						Math.max(0,(tmpImage.width-tmpImage.height/thumbnailCanvas.height*thumbnailCanvas.width)/2),
+						Math.max(0,(tmpImage.height-tmpImage.width/thumbnailCanvas.width*thumbnailCanvas.height)/2),
+						tmpImage.width - Math.max(0,(tmpImage.width-tmpImage.height/thumbnailCanvas.height*thumbnailCanvas.width)),
+						tmpImage.height - Math.max(0,(tmpImage.height-tmpImage.width/thumbnailCanvas.width*thumbnailCanvas.height)),
 						0, 0,
 						thumbnailCanvas.width, thumbnailCanvas.height);
 	} else {
 		thumbnailContext.drawImage(tmpImage, 
 						0, 0,
-						previewImage.width, previewImage.height,
+						tmpImage.width, tmpImage.height,
 						0, 0,
 						thumbnailCanvas.width, thumbnailCanvas.height);
 	}
